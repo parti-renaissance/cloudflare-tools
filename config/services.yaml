@@ -1,0 +1,16 @@
+parameters:
+    input_dir: '%kernel.project_dir%/input'
+    output_dir: '%kernel.project_dir%/output'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        bind:
+            string $cloudflareApiToken: '%env(CLOUDFLARE_API_TOKEN)%'
+            string $inputDir: '%input_dir%'
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/Kernel.php'

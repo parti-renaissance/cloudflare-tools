@@ -1,0 +1,5 @@
+framework:
+    secret: '%env(APP_SECRET)%'
+    router: false
+    session: false
+    assets: false

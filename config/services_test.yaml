@@ -1,0 +1,10 @@
+imports:
+  - { resource: services_dev.yaml }
+
+parameters:
+    input_dir: '%kernel.project_dir%/tests/input'
+    output_dir: '%kernel.project_dir%/tests/output'
+
+services:
+    App\Cloudflare\Contracts\Client:
+        class: App\Tests\Test\Cloudflare\DummyClient
