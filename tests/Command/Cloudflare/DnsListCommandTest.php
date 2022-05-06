@@ -87,7 +87,7 @@ class DnsListCommandTest extends CloudflareCommandTestCase
             ['id' => 'ghi789', 'type' => 'CNAME', 'name' => 'bar.foo.test', 'content' => 'bar.test'],
         ];
 
-        // Few existing DNS records with no filters
+        // Few existing DNS records with no filter
         yield [
             $existingDnsRecords,
             null,
