@@ -14,7 +14,7 @@ class DnsImportCommandTest extends CloudflareCommandTestCase
 
     public function testSuccessCommand(): void
     {
-        $this->client->setZones([['id' => 'abc123', 'name' => 'foo.test', 'status' => 'active']]);
+        $this->setAvailableZones([['id' => 'abc123', 'name' => 'foo.test', 'status' => 'active']]);
 
         $commandTester = $this->executeCommand([
             'zone' => 'foo.test',
@@ -30,7 +30,7 @@ class DnsImportCommandTest extends CloudflareCommandTestCase
      */
     public function testInvalidArguments(array $arguments, int $expectedStatusCode, string $expectedErrorMessage): void
     {
-        $this->client->setZones([['id' => 'abc123', 'name' => 'foo.test', 'status' => 'active']]);
+        $this->setAvailableZones([['id' => 'abc123', 'name' => 'foo.test', 'status' => 'active']]);
 
         $commandTester = $this->executeCommand($arguments);
 
@@ -60,7 +60,10 @@ class DnsImportCommandTest extends CloudflareCommandTestCase
             Command::INVALID,
             'File "/app/tests/input/foo.csv" does not exist',
         ];
+    }
 
+    public function provideInvalidInputFile(): void
+    {
         yield [
             [
                 'zone' => 'foo.test',

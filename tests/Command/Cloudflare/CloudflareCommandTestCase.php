@@ -8,7 +8,12 @@ use App\Tests\Test\Cloudflare\DummyClient;
 
 abstract class CloudflareCommandTestCase extends CommandTestCase
 {
-    protected ?DummyClient $client = null;
+    private ?DummyClient $client = null;
+
+    protected function setAvailableZones(array $zones): void
+    {
+        $this->client->setZones($zones);
+    }
 
     protected function setUp(): void
     {

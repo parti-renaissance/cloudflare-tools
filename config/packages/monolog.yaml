@@ -6,7 +6,7 @@ monolog:
         security:
             level:    debug
             type:     stream
-            path:     '%output_dir%/cloudflare.log'
+            path:     '%output_dir%/cloudflare_%kernel.environment%.log'
             channels: [cloudflare]
 
 when@dev:

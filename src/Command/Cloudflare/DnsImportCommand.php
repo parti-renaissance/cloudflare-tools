@@ -3,7 +3,6 @@
 namespace App\Command\Cloudflare;
 
 use App\Command\CsvCommandTrait;
-use League\Csv\SyntaxError;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -19,7 +18,7 @@ class DnsImportCommand extends AbstractCommand
     {
         $this
             ->setDescription('Import DNS records from a CSV file')
-            ->addArgument('file', InputArgument::OPTIONAL, 'Location of the file to import.')
+            ->addArgument('file', InputArgument::OPTIONAL, 'Location of the file to import')
             ->addArgument('zone', InputArgument::OPTIONAL, 'The zone name')
             ->addOption('csv-delimiter', null, InputOption::VALUE_OPTIONAL, 'Delimiter of the input CSV file', ',')
             ->addOption('type-column', null, InputOption::VALUE_OPTIONAL, 'Name of the "type" column in the input CSV file', 'type')
@@ -93,7 +92,7 @@ EOF
             $csv = self::readCsv($filename, 0, $input->getOption('csv-delimiter'));
 
             $total = $csv->count();
-        } catch (SyntaxError $error) {
+        } catch (\Exception $error) {
             $this->io->error($error->getMessage());
 
             return self::FAILURE;
@@ -109,14 +108,20 @@ EOF
             return self::FAILURE;
         }
 
+        $typeColumn = $input->getOption('type-column');
+        $nameColumn = $input->getOption('name-column');
+        $contentColumn = $input->getOption('content-column');
+        $ttlColumn = $input->getOption('ttl-column');
+        $proxiedColumn = $input->getOption('proxied-column');
+
         $this->io->progressStart($total);
 
         foreach ($csv as $row) {
-            $type = $row[$input->getOption('type-column')];
-            $name = $row[$input->getOption('name-column')];
-            $content = $row[$input->getOption('content-column')];
-            $ttl = $row[$input->getOption('ttl-column')] ?? null;
-            $proxied = $row[$input->getOption('proxied-column')] ?? null;
+            $type = $row[$typeColumn];
+            $name = $row[$nameColumn];
+            $content = $row[$contentColumn];
+            $ttl = $row[$ttlColumn] ?? null;
+            $proxied = $row[$proxiedColumn] ?? null;
 
             $this->cloudflare->importDnsRecord($zone, $type, $name, $content, $ttl, $proxied);
 
