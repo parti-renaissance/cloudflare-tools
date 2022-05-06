@@ -6,6 +6,7 @@ use App\Command\CsvCommandTrait;
 use League\Csv\SyntaxError;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class DnsImportCommand extends AbstractCommand
@@ -20,6 +21,12 @@ class DnsImportCommand extends AbstractCommand
             ->setDescription('Import DNS records from a CSV file')
             ->addArgument('file', InputArgument::OPTIONAL, 'Location of the file to import.')
             ->addArgument('zone', InputArgument::OPTIONAL, 'The zone name')
+            ->addOption('csv-delimiter', null, InputOption::VALUE_OPTIONAL, 'Delimiter of the input CSV file', ',')
+            ->addOption('type-column', null, InputOption::VALUE_OPTIONAL, 'Name of the "type" column in the input CSV file', 'type')
+            ->addOption('name-column', null, InputOption::VALUE_OPTIONAL, 'Name of the "name" column in the input CSV file', 'name')
+            ->addOption('content-column', null, InputOption::VALUE_OPTIONAL, 'Name of the "content" column in the input CSV file', 'content')
+            ->addOption('ttl-column', null, InputOption::VALUE_OPTIONAL, 'Name of the "content" column in the input CSV file', 'ttl')
+            ->addOption('proxied-column', null, InputOption::VALUE_OPTIONAL, 'Name of the "content" column in the input CSV file', 'proxied')
             ->setHelp(<<<'EOF'
 The <info>%command.name%</info> command imports DNS records from a CSV file:
 
@@ -32,6 +39,15 @@ The CSV file must contain the following <comment>mandatory headers</comment>:
 The CSV file can contain the following <comment>optionnal headers</comment>:
 
     <comment>ttl</comment>,<comment>proxied</comment>
+
+You can override the CSV delimiter and expected column names by using the following options:
+
+    <comment>--csv-delimiter=,</comment>
+    <comment>--type-column=type</comment>
+    <comment>--name-column=name</comment>
+    <comment>--content-column=content</comment>
+    <comment>--ttl-column=ttl</comment>
+    <comment>--proxied-column=proxied</comment>
 
 You can specify the <comment>zone</comment> as an argument to bypass the zone selection prompt:
 
@@ -74,7 +90,7 @@ EOF
         $this->io->comment("Reading file: <info>$filename</info>");
 
         try {
-            $csv = self::readCsv($filename);
+            $csv = self::readCsv($filename, 0, $input->getOption('csv-delimiter'));
 
             $total = $csv->count();
         } catch (SyntaxError $error) {
@@ -96,11 +112,11 @@ EOF
         $this->io->progressStart($total);
 
         foreach ($csv as $row) {
-            $type = $row['type'];
-            $name = $row['name'];
-            $content = $row['content'];
-            $ttl = $row['ttl'] ?? null;
-            $proxied = $row['proxied'] ?? null;
+            $type = $row[$input->getOption('type-column')];
+            $name = $row[$input->getOption('name-column')];
+            $content = $row[$input->getOption('content-column')];
+            $ttl = $row[$input->getOption('ttl-column')] ?? null;
+            $proxied = $row[$input->getOption('proxied-column')] ?? null;
 
             $this->cloudflare->importDnsRecord($zone, $type, $name, $content, $ttl, $proxied);
 
