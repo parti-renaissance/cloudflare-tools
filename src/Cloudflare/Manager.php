@@ -4,8 +4,6 @@ namespace App\Cloudflare;
 
 use App\Cloudflare\Contracts\Client;
 use App\Cloudflare\Contracts\Manager as ManagerInterface;
-use App\Cloudflare\Factory\DnsRecordFactory;
-use App\Cloudflare\Factory\ZoneFactory;
 use App\Cloudflare\Model\DnsRecord;
 use App\Cloudflare\Model\Zone;
 
@@ -49,7 +47,7 @@ class Manager implements ManagerInterface
         ?int $ttl,
         ?bool $proxied
     ): DnsRecord {
-        return DnsRecordFactory::create($zone, null, $type, $name, $content, $ttl, $proxied);
+        return new DnsRecord($zone, null, $type, $name, $content, $ttl, $proxied);
     }
 
     public function saveDnsRecord(DnsRecord $dnsRecord): void
@@ -65,9 +63,6 @@ class Manager implements ManagerInterface
 
     private function addDnsRecord(DnsRecord $dnsRecord): void
     {
-        $this->cachedDnsRecords[$dnsRecord->getZone()->getName()][] = $dnsRecord;
-
-        return;
         $dnsRecordId = $this->client->addDnsRecord(
             $dnsRecord->getZone()->getId(),
             $dnsRecord->getType(),
@@ -78,11 +73,12 @@ class Manager implements ManagerInterface
         );
 
         $dnsRecord->setId($dnsRecordId);
+
+        $this->cachedDnsRecords[$dnsRecord->getZone()->getName()][] = $dnsRecord;
     }
 
     private function updateDnsRecord(DnsRecord $dnsRecord): void
     {
-        return;
         $this->client->updateDnsRecord(
             $dnsRecord->getZone()->getId(),
             $dnsRecord->getId(),
@@ -94,10 +90,11 @@ class Manager implements ManagerInterface
         );
     }
 
+    /** @return Zone[]|array */
     private function fetchZones(): array
     {
         return array_map(function (object $zoneResult): Zone {
-            return ZoneFactory::create(
+            return new Zone(
                 $zoneResult->id,
                 $zoneResult->name,
                 $zoneResult->status,
@@ -107,17 +104,18 @@ class Manager implements ManagerInterface
         }, $this->client->getZones());
     }
 
+    /** @return DnsRecord[]|array */
     private function fetchDnsRecords(Zone $zone): array
     {
         return array_map(function (object $dnsRecordResult) use ($zone): DnsRecord {
-            return DnsRecordFactory::create(
+            return new DnsRecord(
                 $zone,
                 $dnsRecordResult->id,
                 $dnsRecordResult->type,
                 $dnsRecordResult->name,
                 $dnsRecordResult->content,
-                $dnsRecordResult->ttl ?? DnsRecord::DEFAULT_TTL,
-                $dnsRecordResult->proxied ?? DnsRecord::DEFAULT_PROXIED
+                $dnsRecordResult->ttl ?? null,
+                $dnsRecordResult->proxied ?? null
             );
         }, $this->client->getDnsRecords($zone->getId()));
     }

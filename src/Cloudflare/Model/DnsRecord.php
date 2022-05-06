@@ -21,16 +21,20 @@ class DnsRecord
         string $type,
         string $name,
         string $content,
-        int $ttl,
-        bool $proxied
+        ?int $ttl,
+        ?bool $proxied
     ) {
+        if (!in_array($type, DnsRecordTypeEnum::ALL, true)) {
+            throw new \InvalidArgumentException(sprintf('DNS record type "%s" is not handled.', $type));
+        }
+
         $this->zone = $zone;
         $this->id = $id;
         $this->type = $type;
         $this->name = $name;
         $this->content = $content;
-        $this->ttl = $ttl;
-        $this->proxied = $proxied;
+        $this->ttl = $ttl ?? self::DEFAULT_TTL;
+        $this->proxied = $proxied ?? self::DEFAULT_PROXIED;
     }
 
     public function __toString(): string
