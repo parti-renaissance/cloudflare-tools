@@ -9,13 +9,14 @@ RUN apt-get update && \
     apt-get install -y \
         git \
         libzip-dev \
-        zip
+        libpng-dev
 
-RUN docker-php-ext-install \
+RUN docker-php-ext-configure \
+        gd \
+    && docker-php-ext-install \
         zip \
-
+        gd \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-
     && curl -L https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-$(dpkg --print-architecture) --output /usr/local/bin/gosu && \
         chmod +x /usr/local/bin/gosu && \
         addgroup foo && \

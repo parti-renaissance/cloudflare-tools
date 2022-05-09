@@ -39,17 +39,6 @@ class Manager implements ManagerInterface
         return $this->cachedDnsRecords[$zone->getName()];
     }
 
-    public function createDnsRecord(
-        Zone $zone,
-        string $type,
-        string $name,
-        string $content,
-        ?int $ttl,
-        ?bool $proxied
-    ): DnsRecord {
-        return new DnsRecord($zone, null, $type, $name, $content, $ttl, $proxied);
-    }
-
     public function saveDnsRecord(DnsRecord $dnsRecord): void
     {
         if (!$dnsRecord->getId()) {

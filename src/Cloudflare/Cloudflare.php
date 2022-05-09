@@ -77,42 +77,8 @@ class Cloudflare implements CloudflareInterface
         return !empty($dnsRecords) ? reset($dnsRecords) : null;
     }
 
-    public function importDnsRecord(
-        Zone $zone,
-        string $type,
-        string $name,
-        string $content,
-        ?int $ttl,
-        ?bool $proxied
-    ): void {
-        $dnsRecord = $this->findDnsRecord($zone, $type, $name, $content);
-
-        if ($dnsRecord) {
-            if (!$dnsRecord->needsUpdate($content)) {
-                $this->logDnsRecordAction($dnsRecord, 'nothing');
-
-                return;
-            }
-
-            $dnsRecord->update($content);
-
-            $this->logDnsRecordAction($dnsRecord, 'update');
-        }
-
-        if (!$dnsRecord) {
-            $dnsRecord = $this->manager->createDnsRecord($zone, $type, $name, $content, $ttl, $proxied);
-
-            $this->logDnsRecordAction($dnsRecord, 'create');
-        }
-
-        $this->manager->saveDnsRecord($dnsRecord);
-    }
-
-    private function logDnsRecordAction(DnsRecord $dnsRecord, string $action): void
+    public function saveDnsRecord(DnsRecord $dnsRecord): void
     {
-        $this->logger->notice('DnsRecord processed.', [
-            'record' => (string) $dnsRecord,
-            'action' => $action,
-        ]);
+        $this->manager->saveDnsRecord($dnsRecord);
     }
 }

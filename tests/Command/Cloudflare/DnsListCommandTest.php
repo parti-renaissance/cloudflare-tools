@@ -2,14 +2,14 @@
 
 namespace App\Tests\Command\Cloudflare;
 
-use App\Command\Cloudflare\DnsListCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\RuntimeException;
 
 class DnsListCommandTest extends CloudflareCommandTestCase
 {
     public function getCommandName(): string
     {
-        return DnsListCommand::$defaultName;
+        return 'cloudflare:dns:list';
     }
 
     /**
@@ -22,8 +22,8 @@ class DnsListCommandTest extends CloudflareCommandTestCase
         ?string $content,
         array $expectedDnsRecords = []
     ): void {
-        $this->client->setZones([['id' => 'abc123', 'name' => 'foo.test', 'status' => 'active']]);
-        $this->client->setDnsRecords($existingDnsRecords);
+        $this->setAvailableZones([['id' => 'abc123', 'name' => 'foo.test', 'status' => 'active']]);
+        $this->setAvailableDnsRecords($existingDnsRecords);
 
         $commandTester = $this->executeCommand(array_filter([
             'zone' => 'foo.test',
@@ -215,11 +215,9 @@ class DnsListCommandTest extends CloudflareCommandTestCase
 
     public function testCommandWithoutZone(): void
     {
-        $this->client->setZones([['id' => 'abc123', 'name' => 'foo.test', 'status' => 'active']]);
+        self::expectException(RuntimeException::class);
+        self::expectExceptionMessage('Not enough arguments (missing: "zone").');
 
-        $commandTester = $this->executeCommand();
-
-        self::assertSame(Command::INVALID, $commandTester->getStatusCode());
-        self::assertStringContainsString('No zone provided.', $commandTester->getDisplay());
+        $this->executeCommand();
     }
 }

@@ -9,6 +9,7 @@ services:
         bind:
             string $cloudflareApiToken: '%env(CLOUDFLARE_API_TOKEN)%'
             string $inputDir: '%input_dir%'
+            string $outputDir: '%output_dir%'
 
     App\:
         resource: '../src/'

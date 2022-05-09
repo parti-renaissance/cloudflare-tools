@@ -2,13 +2,12 @@
 
 namespace App\Command\Cloudflare;
 
-use App\Cloudflare\Model\Zone;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class ZonesListCommand extends AbstractCommand
 {
-    public static $defaultName = 'cloudflare:zones:list';
+    protected static $defaultName = 'cloudflare:zones:list';
 
     protected function configure()
     {
@@ -37,15 +36,9 @@ EOF
             return self::SUCCESS;
         }
 
-        $this->io->text(sprintf('<comment>%d</comment> zone(s):', count($zones)));
+        $this->io->comment(sprintf('<comment>%d</comment> zone(s):', count($zones)));
 
-        $this->io->table(['Name', 'ID', 'Status'], array_map(function (Zone $zone): array {
-            return [
-                $zone->getName(),
-                $zone->getId(),
-                $zone->getStatus(),
-            ];
-        }, $zones));
+        $this->displayZones($zones);
 
         return self::SUCCESS;
     }

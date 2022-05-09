@@ -15,6 +15,11 @@ abstract class CloudflareCommandTestCase extends CommandTestCase
         $this->client->setZones($zones);
     }
 
+    protected function setAvailableDnsRecords(array $dnsRecords): void
+    {
+        $this->client->setDnsRecords($dnsRecords);
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

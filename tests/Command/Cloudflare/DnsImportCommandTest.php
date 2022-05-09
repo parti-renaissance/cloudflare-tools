@@ -2,14 +2,14 @@
 
 namespace App\Tests\Command\Cloudflare;
 
-use App\Command\Cloudflare\DnsImportCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\RuntimeException;
 
 class DnsImportCommandTest extends CloudflareCommandTestCase
 {
     public function getCommandName(): string
     {
-        return DnsImportCommand::$defaultName;
+        return 'cloudflare:dns:import';
     }
 
     public function testSuccessCommand(): void
@@ -26,51 +26,52 @@ class DnsImportCommandTest extends CloudflareCommandTestCase
     }
 
     /**
+     * @dataProvider missingArgumentsDataProvider
+     */
+    public function testMissingArguments(array $arguments, string $expectedErrorMessage): void
+    {
+        self::expectException(RuntimeException::class);
+        self::expectExceptionMessage($expectedErrorMessage);
+
+        $this->executeCommand($arguments);
+    }
+
+    public function missingArgumentsDataProvider(): iterable
+    {
+        yield [
+            [],
+            'Not enough arguments (missing: "zone, file").',
+        ];
+    }
+
+    /**
      * @dataProvider invalidArgumentsDataProvider
      */
-    public function testInvalidArguments(array $arguments, int $expectedStatusCode, string $expectedErrorMessage): void
+    public function testInvalidArguments(array $arguments, string $expectedErrorMessage): void
     {
         $this->setAvailableZones([['id' => 'abc123', 'name' => 'foo.test', 'status' => 'active']]);
 
         $commandTester = $this->executeCommand($arguments);
 
-        self::assertSame($expectedStatusCode, $commandTester->getStatusCode());
+        self::assertSame(Command::INVALID, $commandTester->getStatusCode());
         self::assertStringContainsString($expectedErrorMessage, $commandTester->getDisplay());
     }
 
     public function invalidArgumentsDataProvider(): iterable
     {
         yield [
-            ['file' => 'dns.csv'],
-            Command::INVALID,
-            'No zone provided.',
-        ];
-
-        yield [
-            ['zone' => 'foo.test'],
-            Command::INVALID,
-            'No file provided.',
-        ];
-
-        yield [
             [
                 'zone' => 'foo.test',
                 'file' => 'foo.csv',
             ],
-            Command::INVALID,
-            'File "/app/tests/input/foo.csv" does not exist',
+            'File "foo.csv" does not exist',
         ];
-    }
-
-    public function provideInvalidInputFile(): void
-    {
         yield [
             [
                 'zone' => 'foo.test',
                 'file' => 'dns_empty.csv',
             ],
-            Command::INVALID,
-            'No record found in file "/app/tests/input/dns_empty.csv".',
+            'No record found in file "dns_empty.csv".',
         ];
 
         yield [
@@ -78,7 +79,6 @@ class DnsImportCommandTest extends CloudflareCommandTestCase
                 'zone' => 'foo.test',
                 'file' => 'dns_no_header.csv',
             ],
-            Command::FAILURE,
             'The header record does not exist or is empty at offset: `0`',
         ];
     }

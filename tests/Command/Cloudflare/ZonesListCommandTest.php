@@ -2,14 +2,13 @@
 
 namespace App\Tests\Command\Cloudflare;
 
-use App\Command\Cloudflare\ZonesListCommand;
 use Symfony\Component\Console\Command\Command;
 
 class ZonesListCommandTest extends CloudflareCommandTestCase
 {
     public function getCommandName(): string
     {
-        return ZonesListCommand::$defaultName;
+        return 'cloudflare:zones:list';
     }
 
     /**
@@ -17,7 +16,7 @@ class ZonesListCommandTest extends CloudflareCommandTestCase
      */
     public function testSuccessCommand(array $availableZones): void
     {
-        $this->client->setZones($availableZones);
+        $this->setAvailableZones($availableZones);
 
         $commandTester = $this->executeCommand();
 

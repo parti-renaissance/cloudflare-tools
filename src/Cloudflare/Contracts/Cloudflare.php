@@ -22,12 +22,5 @@ interface Cloudflare
         string $content = null
     ): ?DnsRecord;
 
-    public function importDnsRecord(
-        Zone $zone,
-        string $type,
-        string $name,
-        string $content,
-        ?int $ttl,
-        ?bool $proxied
-    ): void;
+    public function saveDnsRecord(DnsRecord $dnsRecord): void;
 }
