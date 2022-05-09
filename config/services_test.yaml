@@ -2,8 +2,8 @@ imports:
   - { resource: services_dev.yaml }
 
 parameters:
-    input_dir: '%kernel.project_dir%/tests/input'
-    output_dir: '%kernel.project_dir%/tests/output'
+    input_dir: '%kernel.project_dir%/tests/Test/input'
+    output_dir: '%kernel.project_dir%/tests/Test/output'
 
 services:
     App\Cloudflare\Contracts\Client:

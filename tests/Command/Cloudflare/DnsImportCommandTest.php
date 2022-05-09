@@ -7,6 +7,8 @@ use Symfony\Component\Console\Exception\RuntimeException;
 
 class DnsImportCommandTest extends CloudflareCommandTestCase
 {
+    private ?string $inputDir = null;
+
     public function getCommandName(): string
     {
         return 'cloudflare:dns:import';
@@ -15,6 +17,14 @@ class DnsImportCommandTest extends CloudflareCommandTestCase
     public function testSuccessCommand(): void
     {
         $this->setAvailableZones([['id' => 'abc123', 'name' => 'foo.test', 'status' => 'active']]);
+        $this->createInputFile(<<<'CSV'
+type,name,content
+A,foo.test,157.230.77.126
+A,bar.test,141.94.219.130
+A,foo.test,157.230.77.126
+A,bar.test,141.94.219.131
+CSV
+        );
 
         $commandTester = $this->executeCommand([
             'zone' => 'foo.test',
@@ -42,6 +52,19 @@ class DnsImportCommandTest extends CloudflareCommandTestCase
             [],
             'Not enough arguments (missing: "zone, file").',
         ];
+
+        yield [
+            [
+                'zone' => 'foo.test',
+            ],
+            'Not enough arguments (missing: "file").',
+        ];
+        yield [
+            [
+                'file' => 'file.csv',
+            ],
+            'Not enough arguments (missing: "zone").',
+        ];
     }
 
     /**
@@ -66,20 +89,52 @@ class DnsImportCommandTest extends CloudflareCommandTestCase
             ],
             'File "foo.csv" does not exist',
         ];
-        yield [
-            [
-                'zone' => 'foo.test',
-                'file' => 'dns_empty.csv',
-            ],
-            'No record found in file "dns_empty.csv".',
-        ];
+    }
 
+    /**
+     * @dataProvider invalidFileDataProvider
+     */
+    public function testInvalidFile(string $csvAsString, string $expectedErrorMessage): void
+    {
+        $inputDir = $this->getContainer()->getParameter('input_dir');
+
+        $this->setAvailableZones([['id' => 'abc123', 'name' => 'foo.test', 'status' => 'active']]);
+        $this->createInputFile($csvAsString);
+
+        $commandTester = $this->executeCommand([
+            'zone' => 'foo.test',
+            'file' => 'dns.csv',
+        ]);
+
+        self::assertSame(Command::INVALID, $commandTester->getStatusCode());
+        self::assertStringContainsString($expectedErrorMessage, $commandTester->getDisplay());
+
+        unlink("$inputDir/dns.csv");
+    }
+
+    public function invalidFileDataProvider(): iterable
+    {
         yield [
-            [
-                'zone' => 'foo.test',
-                'file' => 'dns_no_header.csv',
-            ],
+            '',
             'The header record does not exist or is empty at offset: `0`',
         ];
+
+        yield [<<<'CSV'
+type,name,content
+CSV,
+            'No record found in file "dns.csv".',
+        ];
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->inputDir = $this->getContainer()->getParameter('input_dir');
+    }
+
+    private function createInputFile(string $csvAsString): void
+    {
+        file_put_contents(sprintf('%s/dns.csv', $this->inputDir), $csvAsString);
     }
 }

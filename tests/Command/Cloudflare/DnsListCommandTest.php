@@ -213,11 +213,19 @@ class DnsListCommandTest extends CloudflareCommandTestCase
         ];
     }
 
-    public function testCommandWithoutZone(): void
+    /**
+     * @dataProvider missingArgumentsDataProvider
+     */
+    public function testMissingArguments(array $arguments, string $expectedErrorMessage): void
     {
         self::expectException(RuntimeException::class);
-        self::expectExceptionMessage('Not enough arguments (missing: "zone").');
+        self::expectExceptionMessage($expectedErrorMessage);
 
-        $this->executeCommand();
+        $this->executeCommand($arguments);
+    }
+
+    public function missingArgumentsDataProvider(): iterable
+    {
+        yield [[], 'Not enough arguments (missing: "zone").'];
     }
 }
