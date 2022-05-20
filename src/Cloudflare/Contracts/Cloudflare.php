@@ -22,5 +22,9 @@ interface Cloudflare
         string $content = null
     ): ?DnsRecord;
 
-    public function saveDnsRecord(DnsRecord $dnsRecord): void;
+    public function persistDnsRecord(DnsRecord $dnsRecord): void;
+
+    public function flush(): void;
+
+    public function purgeCache(Zone $zone): void;
 }

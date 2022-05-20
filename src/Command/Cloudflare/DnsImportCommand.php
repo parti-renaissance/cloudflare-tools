@@ -182,13 +182,9 @@ EOF
             return self::FAILURE;
         }
 
-        $this->io->text("Creating <comment>$createCount</comment> DNS record(s)...");
+        $this->io->text('Flushing DNS record(s)...');
 
-        $this->saveDnsRecords($dnsRecordsToCreate);
-
-        $this->io->text("Updating <comment>$updateCount</comment> DNS record(s)...");
-
-        $this->saveDnsRecords($dnsRecordsToUpdate);
+        $this->cloudflare->flush();
 
         $this->io->success("Successfully processed $total DNS records.");
 

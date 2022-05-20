@@ -13,5 +13,9 @@ interface Manager
     /** @return DnsRecord[]|array */
     public function getDnsRecords(Zone $zone): array;
 
-    public function saveDnsRecord(DnsRecord $dnsRecord): void;
+    public function persistDnsRecord(DnsRecord $dnsRecord): void;
+
+    public function flush(): void;
+
+    public function purgeCache(Zone $zone): void;
 }

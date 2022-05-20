@@ -89,6 +89,11 @@ class Client implements ClientInterface
         );
     }
 
+    public function purgeCache(string $zoneId): void
+    {
+        $this->getZonesClient()->cachePurgeEverything($zoneId);
+    }
+
     private function getZonesClient(): Zones
     {
         if (!$this->zonesClient) {

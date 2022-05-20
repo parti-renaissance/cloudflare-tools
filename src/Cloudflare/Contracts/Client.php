@@ -42,4 +42,6 @@ interface Client
         int $ttl,
         bool $proxied
     ): void;
+
+    public function purgeCache(string $zoneId): void;
 }

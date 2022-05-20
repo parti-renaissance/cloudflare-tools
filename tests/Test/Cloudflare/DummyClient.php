@@ -64,4 +64,8 @@ class DummyClient implements Client
             $this->dnsRecords[] = (object) $dnsRecord;
         }
     }
+
+    public function purgeCache(string $zoneId): void
+    {
+    }
 }

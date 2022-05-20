@@ -38,6 +38,8 @@ class Importer
         if (!$dnsRecord) {
             $dnsRecord = $this->createDnsRecord($zone, $type, $name, $content, $ttl, $proxied);
 
+            $this->cloudflare->persistDnsRecord($dnsRecord);
+
             $this->addAction($dnsRecord, self::ACTION_CREATE);
 
             return;
@@ -45,6 +47,8 @@ class Importer
 
         if ($dnsRecord->needsUpdate($content)) {
             $dnsRecord->update($content);
+
+            $this->cloudflare->persistDnsRecord($dnsRecord);
 
             $this->addAction($dnsRecord, self::ACTION_UPDATE);
 

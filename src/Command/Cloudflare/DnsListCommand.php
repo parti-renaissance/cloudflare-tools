@@ -80,6 +80,10 @@ EOF
             return self::INVALID;
         }
 
+        $this->io->text('Zone details:');
+
+        $this->displayZones([$zone]);
+
         $this->io->section("Listing DNS records for zone <info>$zone</info>:");
 
         $filters = [];

@@ -14,25 +14,92 @@ class DnsImportCommandTest extends CloudflareCommandTestCase
         return 'cloudflare:dns:import';
     }
 
-    public function testSuccessCommand(): void
-    {
+    /**
+     * @dataProvider successCommandDataProvider
+     */
+    public function testSuccessCommand(
+        string $csvAsString,
+        int $expectedCreated,
+        int $expectedUpdated,
+        int $expectedUnchanged
+    ): void {
         $this->setAvailableZones([['id' => 'abc123', 'name' => 'foo.test', 'status' => 'active']]);
-        $this->createInputFile(<<<'CSV'
-type,name,content
-A,foo.test,157.230.77.126
-A,bar.test,141.94.219.130
-A,foo.test,157.230.77.126
-A,bar.test,141.94.219.131
-CSV
-        );
+        $this->setAvailableDnsRecords([['id' => 'abc123', 'type' => 'A', 'name' => 'foo.test', 'content' => '127.0.0.1']]);
+
+        $this->createInputFile($csvAsString);
 
         $commandTester = $this->executeCommand([
             'zone' => 'foo.test',
             'file' => 'dns.csv',
         ]);
 
+        $display = $commandTester->getDisplay();
+
         self::assertSame(Command::SUCCESS, $commandTester->getStatusCode());
-        self::assertStringContainsString('Successfully processed 4 DNS records.', $commandTester->getDisplay());
+        self::assertStringContainsString("$expectedCreated DNS record(s) will be created", $display);
+        self::assertStringContainsString("$expectedUpdated DNS record(s) will be updated", $display);
+        self::assertStringContainsString("$expectedUnchanged DNS record(s) will remain unchanged", $display);
+    }
+
+    public function successCommandDataProvider(): iterable
+    {
+        yield [
+            <<<'CSV'
+type,name,content
+A,bar.test,127.0.0.1
+CSV,
+            1,
+            0,
+            0,
+        ];
+
+        yield [
+            <<<'CSV'
+type,name,content
+A,foo.test,127.0.0.2
+A,bar.test,127.0.0.1
+CSV,
+            1,
+            1,
+            0,
+        ];
+
+        yield [
+            <<<'CSV'
+type,name,content
+A,foo.test,127.0.0.1
+A,bar.test,127.0.0.1
+A,foo.test,127.0.0.2
+CSV,
+            1,
+            1,
+            1,
+        ];
+
+        yield [
+            <<<'CSV'
+type,name,content
+A,foo.test,127.0.0.2
+A,bar.test,127.0.0.1
+A,foo.test,127.0.0.1
+CSV,
+            1,
+            2,
+            0,
+        ];
+
+        yield [
+            <<<'CSV'
+type,name,content
+A,foo.test,127.0.0.2
+A,bar.test,127.0.0.1
+A,foo.test,127.0.0.1
+A,bar.test,127.0.0.1
+CSV,
+            1,
+            2,
+            1,
+        ];
     }
 
     /**

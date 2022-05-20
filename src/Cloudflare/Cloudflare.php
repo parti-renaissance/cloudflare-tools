@@ -77,8 +77,18 @@ class Cloudflare implements CloudflareInterface
         return !empty($dnsRecords) ? reset($dnsRecords) : null;
     }
 
-    public function saveDnsRecord(DnsRecord $dnsRecord): void
+    public function persistDnsRecord(DnsRecord $dnsRecord): void
     {
-        $this->manager->saveDnsRecord($dnsRecord);
+        $this->manager->persistDnsRecord($dnsRecord);
+    }
+
+    public function flush(): void
+    {
+        $this->manager->flush();
+    }
+
+    public function purgeCache(Zone $zone): void
+    {
+        $this->manager->purgeCache($zone);
     }
 }

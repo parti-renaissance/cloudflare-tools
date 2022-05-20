@@ -16,6 +16,9 @@ class Manager implements ManagerInterface
     /** @var array|DnsRecord[] */
     private array $cachedDnsRecords = [];
 
+    private array $dnsRecordsToCreate = [];
+    private array $dnsRecordsToUpdate = [];
+
     public function __construct(Client $client)
     {
         $this->client = $client;
@@ -39,15 +42,35 @@ class Manager implements ManagerInterface
         return $this->cachedDnsRecords[$zone->getName()];
     }
 
-    public function saveDnsRecord(DnsRecord $dnsRecord): void
+    public function persistDnsRecord(DnsRecord $dnsRecord): void
     {
-        if (!$dnsRecord->getId()) {
-            $this->addDnsRecord($dnsRecord);
+        if ($dnsRecord->getId()) {
+            if (!in_array($dnsRecord, $this->dnsRecordsToUpdate)) {
+                $this->dnsRecordsToUpdate[] = $dnsRecord;
+            }
 
             return;
         }
 
-        $this->updateDnsRecord($dnsRecord);
+        $this->cachedDnsRecords[$dnsRecord->getZone()->getName()][] = $dnsRecord;
+
+        $this->dnsRecordsToCreate[] = $dnsRecord;
+    }
+
+    public function flush(): void
+    {
+        foreach ($this->dnsRecordsToCreate as $dnsRecord) {
+            $this->addDnsRecord($dnsRecord);
+        }
+
+        foreach ($this->dnsRecordsToUpdate as $dnsRecord) {
+            $this->updateDnsRecord($dnsRecord);
+        }
+    }
+
+    public function purgeCache(Zone $zone): void
+    {
+        $this->client->purgeCache($zone->getId());
     }
 
     private function addDnsRecord(DnsRecord $dnsRecord): void
@@ -62,12 +85,11 @@ class Manager implements ManagerInterface
         );
 
         $dnsRecord->setId($dnsRecordId);
-
-        $this->cachedDnsRecords[$dnsRecord->getZone()->getName()][] = $dnsRecord;
     }
 
     private function updateDnsRecord(DnsRecord $dnsRecord): void
     {
+        $this->dnsRecordsToUpdate[] = $dnsRecord;
         $this->client->updateDnsRecord(
             $dnsRecord->getZone()->getId(),
             $dnsRecord->getId(),
